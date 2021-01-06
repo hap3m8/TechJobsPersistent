@@ -32,12 +32,57 @@ namespace TechJobsPersistent.Controllers
         [HttpGet("/Add")]
         public IActionResult AddJob()
         {
-            return View();
+            List<Skill> skills = context.Skills.ToList();
+            List<Employer> employers = context.Employers.ToList();
+            AddJobViewModel addJobViewModel = new AddJobViewModel(employers, skills);
+            return View(addJobViewModel);
         }
 
-        public IActionResult ProcessAddJobForm()
+        public IActionResult ProcessAddJobForm(AddJobViewModel addJobViewModel, string[] selectedSkills)
         {
-            return View();
+            if (ModelState.IsValid)
+            {
+
+                Employer theEmployer = context.Employers.Find(addJobViewModel.EmployerId);
+
+                Job newJob = new Job
+                {
+                    Name = addJobViewModel.Name,
+                    Employer = theEmployer,
+                    EmployerId = addJobViewModel.EmployerId
+                };
+
+
+                for (int i = 0; i < selectedSkills.Length; i++)
+                {
+                    //Skill theSkill = context.Skills.Find(addJobViewModel.SkillId);
+
+                    JobSkill newJobSkill = new JobSkill
+                    {
+                        JobId = newJob.Id,
+                        Job = newJob,
+                        //SkillId = int.Parse(selectedSkills[i])
+                        //SkillId = theSkill.Id,
+                        SkillId = Int32.Parse(selectedSkills[i])
+                        //Skill = theSkill
+                    };
+
+                    context.JobSkills.Add(newJobSkill);
+                }
+
+                context.Jobs.Add(newJob);
+                context.SaveChanges();
+
+                return Redirect("Index");
+            }
+
+            else
+            {
+                List<Skill> skills = context.Skills.ToList();
+                List<Employer> employers = context.Employers.ToList();
+                addJobViewModel = new AddJobViewModel(employers, skills);
+                return View("AddJob", addJobViewModel);
+            }
         }
 
         public IActionResult Detail(int id)
